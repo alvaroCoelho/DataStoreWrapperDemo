@@ -6,7 +6,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
 
 
-Librería Android que proporciona un wrapper simple y eficiente sobre DataStore de Android para almacenar datos con aislamiento por frontend/pantalla.
+Librería Android que proporciona un wrapper simple y eficiente sobre DataStore de Android para almacenar datos con aislamiento por app/frontend/pantalla.
 
 ---
 
