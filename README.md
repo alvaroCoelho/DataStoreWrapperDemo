@@ -33,7 +33,7 @@ La librería (`datastore-wrapper`) puede ser usada en cualquier proyecto Android
 ## 🌟 Características
 
 - ✅ Wrapper sobre DataStore Preferences de Android
-- ✅ Aislamiento de datos por frontend/pantalla
+- ✅ Aislamiento de datos por app/frontend/pantalla.
 - ✅ Soporte para tipos primitivos (String, Int, Boolean, Float, Long)
 - ✅ Soporte para objetos complejos mediante serialización JSON
 - ✅ API basada en Coroutines y Flow
