@@ -1,6 +1,5 @@
 package com.datastorewrapperdemo
 
-
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
@@ -49,8 +48,9 @@ import com.library.datastorewrapper.getObjectSync
 import com.library.datastorewrapper.saveObject
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 
-// Objeto de dados complexo para serialização
+// Objeto de datos complejo para serialización
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class UserProfile(
@@ -61,45 +61,45 @@ data class UserProfile(
 )
 
 /**
- * Função auxiliar que lê todas as chaves de um DataStore e formata o conteúdo.
- * Tenta ler o valor da chave usando os tipos de dados esperados para uma melhor exibição.
+ * Función auxiliar que lee todas las claves de un DataStore y formatea el contenido.
+ * Intenta leer el valor de la clave usando los tipos de datos esperados para una mejor visualización.
  */
 suspend fun DataStoreManager.getStoreContents(context: Context, storeName: String): String {
     val allKeys = this.getAllKeys()
 
     if (allKeys.isEmpty()) {
-        return "--- Conteúdo de $storeName --- \n\n¡Não há chaves guardadas!"
+        return "--- Contenido de $storeName --- \n\n¡No hay claves guardadas!"
     }
 
     val sb = StringBuilder()
-    sb.appendLine("--- Conteúdo de $storeName (${context.packageName}) ---")
+    sb.appendLine("--- Contenido de $storeName (${context.packageName}) ---")
     sb.appendLine()
 
     for (key in allKeys) {
         val value: Any? = when (key) {
-            // Chaves conhecidas do DataStore de Login
+            // Claves conocidas del DataStore de inicio de sesión
             DataStoreKeys.LOGIN_USERNAME -> this.getStringSync(key, "N/A")
             DataStoreKeys.LOGIN_COUNT -> this.getIntSync(key, -1)
             DataStoreKeys.LOGIN_IS_LOGGED_IN -> this.getBooleanSync(key, false)
 
-            // Chaves conhecidas do DataStore de Perfil (JSON)
+            // Claves conocidas del DataStore de Perfil (JSON)
             DataStoreKeys.PROFILE_USER_PROFILE_JSON -> {
-                // Tenta desserializar como objeto usando a extensão síncrona
+                // Intenta deserializar como objeto usando la extensión síncrona
                 val profileObject = this.getObjectSync(key, UserProfile.serializer())
                 if (profileObject != null) {
-                    "Objeto (JSON): Nome=${profileObject.name}, Idade=${profileObject.age}"
+                    "Objeto (JSON): Nombre=${profileObject.name}, Edad=${profileObject.age}"
                 } else {
-                    // Se falhou, obtém a string JSON bruta
+                    // Si falló, obtiene la cadena JSON bruta
                     val jsonValue = this.getStringSync(key)
-                    if (jsonValue.isNotEmpty()) "JSON Bruto: $jsonValue" else "JSON Vazio"
+                    if (jsonValue.isNotEmpty()) "JSON Bruto: $jsonValue" else "JSON Vacío"
                 }
             }
 
-            // Chaves conhecidas do DataStore de Configuração
+            // Claves conocidas del DataStore de Configuración
             DataStoreKeys.SETTINGS_THEME -> this.getStringSync(key, "N/A")
             DataStoreKeys.SETTINGS_FONT_SIZE -> this.getIntSync(key, -1)
 
-            // Fallback para tipos desconhecidos
+            // Fallback para tipos desconocidos
             else -> {
                 val sVal = this.getStringSync(key)
                 if (sVal.isNotEmpty()) {
@@ -109,12 +109,12 @@ suspend fun DataStoreManager.getStoreContents(context: Context, storeName: Strin
                     if (iVal != Int.MIN_VALUE) {
                         iVal.toString()
                     } else {
-                        "Valor Desconhecido"
+                        "Valor Desconocido"
                     }
                 }
             }
         }
-        sb.appendLine(" • Chave '$key': $value")
+        sb.appendLine(" • Clave '$key': $value")
     }
 
     return sb.toString()
@@ -146,36 +146,36 @@ fun DataStoreDemo() {
     val profileStore = remember { DataStoreManager.getInstance(context, DataStoreKeys.DATASTORE_NAME_PROFILE) }
     val settingsStore = remember { DataStoreManager.getInstance(context, DataStoreKeys.DATASTORE_NAME_SETTINGS) }
 
-    // Estado para o DataStore de Login
+    // Estado para el DataStore de Inicio de Sesión
     var username by remember { mutableStateOf("") }
     var loginCount by remember { mutableIntStateOf(0) }
     var isLoggedIn by remember { mutableStateOf(false) }
 
-    // Estado para o DataStore de Perfil
+    // Estado para el DataStore de Perfil
     var profileName by remember { mutableStateOf("") }
     var profileEmail by remember { mutableStateOf("") }
     var profileAge by remember { mutableStateOf("") }
     var isPremium by remember { mutableStateOf(false) }
-    var savedProfile by remember { mutableStateOf<UserProfile?>(null) } // O perfil deserializado
+    var savedProfile by remember { mutableStateOf<UserProfile?>(null) } // El perfil deserializado
 
-    // Estado para o DataStore de Configurações
+    // Estado para el DataStore de Configuración
     var theme by remember { mutableStateOf("light") }
     var fontSize by remember { mutableIntStateOf(14) }
 
-    // Mensagem de feedback/status
+    // Mensaje de feedback/estado
     var statusMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        // Carregar dados de Login
+        // Cargar datos de Inicio de Sesión
         loginStore.getString(DataStoreKeys.LOGIN_USERNAME).collect { username = it }
         loginStore.getInt(DataStoreKeys.LOGIN_COUNT).collect { loginCount = it }
         loginStore.getBoolean(DataStoreKeys.LOGIN_IS_LOGGED_IN).collect { isLoggedIn = it }
 
-        // Carregar dados de Perfil (Objeto JSON)
-        // Usa a função de extensão getObject<UserProfile>
+        // Cargar datos de Perfil (Objeto JSON)
+        // Usa la función de extensión getObject<UserProfile>
         profileStore.getObject(DataStoreKeys.PROFILE_USER_PROFILE_JSON, UserProfile.serializer()).collect { profile ->
             savedProfile = profile
-            // Preenche os campos de input com o perfil carregado para edição imediata
+            // Rellena los campos de entrada con el perfil cargado para edición inmediata
             profile?.let {
                 profileName = it.name
                 profileEmail = it.email
@@ -184,7 +184,7 @@ fun DataStoreDemo() {
             }
         }
 
-        // Carregar dados de Configuração
+        // Cargar datos de Configuración
         settingsStore.getString(DataStoreKeys.SETTINGS_THEME).collect { theme = it }
         settingsStore.getInt(DataStoreKeys.SETTINGS_FONT_SIZE).collect { fontSize = it }
     }
@@ -192,7 +192,7 @@ fun DataStoreDemo() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Demonstração do DataStore Wrapper") },
+                title = { Text("Demostración del DataStore Wrapper") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -232,7 +232,7 @@ fun DataStoreDemo() {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "1. Ecrã de Login (Tipos Simples)",
+                        text = "1. Pantalla de Inicio de Sesión (Tipos Simples)",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -240,7 +240,7 @@ fun DataStoreDemo() {
                     OutlinedTextField(
                         value = username,
                         onValueChange = { username = it },
-                        label = { Text("Nome de Utilizador") },
+                        label = { Text("Nombre de Usuario") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -255,12 +255,12 @@ fun DataStoreDemo() {
                                     val count = loginCount + 1
                                     loginStore.saveInt(DataStoreKeys.LOGIN_COUNT, count)
                                     loginStore.saveBoolean(DataStoreKeys.LOGIN_IS_LOGGED_IN, true)
-                                    statusMessage = "✓ Dados de login guardados"
+                                    statusMessage = "✓ Datos de inicio de sesión guardados"
                                 }
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Guardar Login")
+                            Text("Guardar Inicio de Sesión")
                         }
 
                         OutlinedButton(
@@ -270,21 +270,21 @@ fun DataStoreDemo() {
                                     username = ""
                                     loginCount = 0
                                     isLoggedIn = false
-                                    statusMessage = "✓ Dados de login eliminados"
+                                    statusMessage = "✓ Datos de inicio de sesión eliminados"
                                 }
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Limpar")
+                            Text("Limpiar")
                         }
                     }
 
                     Text(
-                        text = "Estado: ${if (isLoggedIn) "Autenticado" else "Não Autenticado"}",
+                        text = "Estado: ${if (isLoggedIn) "Autenticado" else "No Autenticado"}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "Contagem de Logins: $loginCount",
+                        text = "Conteo de Inicios de Sesión: $loginCount",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -299,7 +299,7 @@ fun DataStoreDemo() {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "2. Ecrã de Perfil (Objetos Complexos)",
+                        text = "2. Pantalla de Perfil (Objetos Complejos)",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -307,21 +307,21 @@ fun DataStoreDemo() {
                     OutlinedTextField(
                         value = profileName,
                         onValueChange = { profileName = it },
-                        label = { Text("Nome") },
+                        label = { Text("Nombre") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     OutlinedTextField(
                         value = profileEmail,
                         onValueChange = { profileEmail = it },
-                        label = { Text("Email") },
+                        label = { Text("Correo Electrónico") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     OutlinedTextField(
                         value = profileAge,
-                        onValueChange = { profileAge = it.filter { char -> char.isDigit() } }, // Só aceita dígitos
-                        label = { Text("Idade") },
+                        onValueChange = { profileAge = it.filter { char -> char.isDigit() } }, // Solo acepta dígitos
+                        label = { Text("Edad") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -333,7 +333,7 @@ fun DataStoreDemo() {
                             checked = isPremium,
                             onCheckedChange = { isPremium = it }
                         )
-                        Text("Utilizador Premium")
+                        Text("Usuario Premium")
                     }
 
                     Row(
@@ -356,7 +356,7 @@ fun DataStoreDemo() {
                                         UserProfile.serializer()
                                     )
 
-                                    statusMessage = "✓ Perfil guardado como objeto complexo (JSON)"
+                                    statusMessage = "✓ Perfil guardado como objeto complejo (JSON)"
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -379,7 +379,7 @@ fun DataStoreDemo() {
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Limpar")
+                            Text("Limpiar")
                         }
                     }
 
@@ -390,10 +390,10 @@ fun DataStoreDemo() {
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        Text("Nome: ${savedProfile?.name}")
-                        Text("Email: ${savedProfile?.email}")
-                        Text("Idade: ${savedProfile?.age}")
-                        Text("Premium: ${if (savedProfile?.isPremium == true) "Sim" else "Não"}")
+                        Text("Nombre: ${savedProfile?.name}")
+                        Text("Correo Electrónico: ${savedProfile?.email}")
+                        Text("Edad: ${savedProfile?.age}")
+                        Text("Premium: ${if (savedProfile?.isPremium == true) "Sí" else "No"}")
                     }
                 }
             }
@@ -407,7 +407,7 @@ fun DataStoreDemo() {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "3. Ecrã de Configurações",
+                        text = "3. Pantalla de Configuración",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -421,7 +421,7 @@ fun DataStoreDemo() {
                             onClick = {
                                 scope.launch {
                                     settingsStore.saveString(DataStoreKeys.SETTINGS_THEME, "claro")
-                                    statusMessage = "✓ Tema alterado para claro"
+                                    statusMessage = "✓ Tema cambiado a claro"
                                 }
                             },
                             modifier = Modifier.weight(1f)
@@ -431,17 +431,17 @@ fun DataStoreDemo() {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    settingsStore.saveString(DataStoreKeys.SETTINGS_THEME, "escuro")
-                                    statusMessage = "✓ Tema alterado para escuro"
+                                    settingsStore.saveString(DataStoreKeys.SETTINGS_THEME, "oscuro")
+                                    statusMessage = "✓ Tema cambiado a oscuro"
                                 }
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Escuro")
+                            Text("Oscuro")
                         }
                     }
 
-                    Text("Tamanho da fonte: $fontSize px")
+                    Text("Tamaño de fuente: $fontSize px")
                     Slider(
                         value = fontSize.toFloat(),
                         onValueChange = {
@@ -460,12 +460,12 @@ fun DataStoreDemo() {
                                 settingsStore.clear()
                                 theme = "light"
                                 fontSize = 14
-                                statusMessage = "✓ Configuração redefinida"
+                                statusMessage = "✓ Configuración restablecida"
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Redefinir Configurações")
+                        Text("Restablecer Configuración")
                     }
                 }
             }
@@ -482,13 +482,13 @@ fun DataStoreDemo() {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "4. Demonstração de Isolamento (Detalhado)",
+                        text = "4. Demostración de Aislamiento (Detallado)",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
 
                     Text(
-                        text = "Cada DataStore (identificado por 'frontend') está isolado pelo nome do pacote da aplicação. O botão abaixo exibe todas as chaves e valores armazenados em cada um deles.",
+                        text = "Cada DataStore (identificado por 'frontend') está aislado por el nombre del paquete de la aplicación. El botón de abajo muestra todas las claves y valores almacenados en cada uno de ellos.",
                         style = MaterialTheme.typography.bodyMedium
                     )
 
@@ -510,7 +510,7 @@ fun DataStoreDemo() {
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Ver Chaves e Valores por Ecrã")
+                        Text("Ver Claves y Valores por Pantalla")
                     }
 
                     OutlinedButton(
@@ -519,12 +519,12 @@ fun DataStoreDemo() {
                                 loginStore.clear()
                                 profileStore.clear()
                                 settingsStore.clear()
-                                statusMessage = "✓ Todos os dados eliminados de todos os DataStores"
+                                statusMessage = "✓ Todos los datos eliminados de todos los DataStores"
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Limpar Tudo")
+                        Text("Limpiar Todo")
                     }
                 }
             }
