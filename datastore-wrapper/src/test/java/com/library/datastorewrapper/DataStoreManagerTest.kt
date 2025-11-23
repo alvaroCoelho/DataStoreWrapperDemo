@@ -2,19 +2,17 @@ package com.library.datastorewrapper
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @Serializable
 data class User(
@@ -32,16 +30,13 @@ data class Settings(
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28]) // Android 9 para compatibilidad
 class DataStoreManagerTest {
 
     private lateinit var context: Context
     private lateinit var dataStoreManager: DataStoreManager
     private val testFrontendId = "test_screen"
-    private val json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
 
     @Before
     fun setup() {
@@ -187,19 +182,17 @@ class DataStoreManagerTest {
             age = 30
         )
 
-        // Serializar y guardar
-        val jsonString = json.encodeToString(user)
-        dataStoreManager.saveObjectAsJson(key, jsonString)
+        // Guardar usando la extensión saveObject
+        dataStoreManager.saveObject(key, user, User.serializer())
 
-        // Leer y deserializar
-        val resultJson = dataStoreManager.getObjectAsJsonSync(key)
-        val result = json.decodeFromString<User>(resultJson)
+        // Leer usando la extensión getObjectSync
+        val result = dataStoreManager.getObjectSync(key, User.serializer())
 
         assertNotNull(result)
-        assertEquals(user.id, result.id)
-        assertEquals(user.name, result.name)
-        assertEquals(user.email, result.email)
-        assertEquals(user.age, result.age)
+        assertEquals(user.id, result?.id)
+        assertEquals(user.name, result?.name)
+        assertEquals(user.email, result?.email)
+        assertEquals(user.age, result?.age)
     }
 
     @Test
@@ -211,27 +204,26 @@ class DataStoreManagerTest {
             language = "es"
         )
 
-        // Serializar y guardar
-        val jsonString = json.encodeToString(settings)
-        dataStoreManager.saveObjectAsJson(key, jsonString)
+        // Guardar usando la extensión saveObject
+        dataStoreManager.saveObject(key, settings, Settings.serializer())
 
-        // Leer y deserializar
-        val resultJson = dataStoreManager.getObjectAsJsonSync(key)
-        val result = json.decodeFromString<Settings>(resultJson)
+        // Leer usando la extensión getObjectSync
+        val result = dataStoreManager.getObjectSync(key, Settings.serializer())
 
         assertNotNull(result)
-        assertEquals(settings.theme, result.theme)
-        assertEquals(settings.notifications, result.notifications)
-        assertEquals(settings.language, result.language)
+        assertEquals(settings.theme, result?.theme)
+        assertEquals(settings.notifications, result?.notifications)
+        assertEquals(settings.language, result?.language)
     }
 
     @Test
     fun testGetNonExistentObject() = runTest {
         val key = "nonexistent_object"
 
-        val result = dataStoreManager.getObjectAsJsonSync(key)
+        // Intentar leer un objeto que no existe
+        val result = dataStoreManager.getObjectSync(key, User.serializer())
 
-        assertTrue(result.isEmpty())
+        assertNull(result)
     }
 
     @Test
@@ -240,17 +232,47 @@ class DataStoreManagerTest {
         val user1 = User(1, "Alice", "alice@test.com", 25)
         val user2 = User(2, "Bob", "bob@test.com", 30)
 
-        val json1 = json.encodeToString(user1)
-        dataStoreManager.saveObjectAsJson(key, json1)
-        var resultJson = dataStoreManager.getObjectAsJsonSync(key)
-        var result = json.decodeFromString<User>(resultJson)
-        assertEquals("Alice", result.name)
+        // Guardar primer usuario
+        dataStoreManager.saveObject(key, user1, User.serializer())
+        var result = dataStoreManager.getObjectSync(key, User.serializer())
+        assertEquals("Alice", result?.name)
 
-        val json2 = json.encodeToString(user2)
-        dataStoreManager.saveObjectAsJson(key, json2)
-        resultJson = dataStoreManager.getObjectAsJsonSync(key)
-        result = json.decodeFromString<User>(resultJson)
-        assertEquals("Bob", result.name)
+        // Actualizar con segundo usuario
+        dataStoreManager.saveObject(key, user2, User.serializer())
+        result = dataStoreManager.getObjectSync(key, User.serializer())
+        assertEquals("Bob", result?.name)
+    }
+
+    @Test
+    fun testGetObjectWithFlow() = runTest {
+        val key = "flow_user"
+        val user = User(3, "Charlie", "charlie@test.com", 28)
+
+        // Guardar
+        dataStoreManager.saveObject(key, user, User.serializer())
+
+        // Leer usando Flow
+        val result = dataStoreManager.getObject(key, User.serializer()).first()
+
+        assertNotNull(result)
+        assertEquals("Charlie", result?.name)
+        assertEquals(28, result?.age)
+    }
+
+    @Test
+    fun testDeleteComplexObject() = runTest {
+        val key = "delete_user"
+        val user = User(4, "David", "david@test.com", 35)
+
+        // Guardar
+        dataStoreManager.saveObject(key, user, User.serializer())
+        var result = dataStoreManager.getObjectSync(key, User.serializer())
+        assertNotNull(result)
+
+        // Eliminar
+        dataStoreManager.remove(key)
+        result = dataStoreManager.getObjectSync(key, User.serializer())
+        assertNull(result)
     }
 
     // ==================== Tests de Eliminación ====================
